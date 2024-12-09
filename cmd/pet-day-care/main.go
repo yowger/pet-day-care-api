@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	config "github.com/yowger/pet-day-care-api/config"
+	database "github.com/yowger/pet-day-care-api/pkg/db/postgres"
 )
 
 func main() {
@@ -19,5 +19,9 @@ func main() {
 		log.Fatalf("Error parsing config file: %v", err)
 	}
 
-	fmt.Printf("config: %s\n", cfg)
+	database, err := database.NewPGXPool(cfg.DATABASE_URL)
+	if err != nil {
+		log.Fatalf("Error connecting to database: %v", err)
+	}
+	defer database.Close()
 }
