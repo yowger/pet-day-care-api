@@ -16,12 +16,12 @@ RETURNING id, name, species_id, created_at, updated_at
 `
 
 type CreateBreedParams struct {
-	Name      string
-	SpeciesID int32
+	Name      string `db:"name" json:"name"`
+	SpeciesID int32  `db:"species_id" json:"species_id"`
 }
 
 func (q *Queries) CreateBreed(ctx context.Context, arg CreateBreedParams) (Breed, error) {
-	row := q.db.QueryRowContext(ctx, createBreed, arg.Name, arg.SpeciesID)
+	row := q.db.QueryRow(ctx, createBreed, arg.Name, arg.SpeciesID)
 	var i Breed
 	err := row.Scan(
 		&i.ID,
@@ -41,12 +41,12 @@ LIMIT $1 OFFSET $2
 `
 
 type GetAllBreedsPaginatedParams struct {
-	Limit  int32
-	Offset int32
+	Limit  int32 `db:"limit" json:"limit"`
+	Offset int32 `db:"offset" json:"offset"`
 }
 
 func (q *Queries) GetAllBreedsPaginated(ctx context.Context, arg GetAllBreedsPaginatedParams) ([]Breed, error) {
-	rows, err := q.db.QueryContext(ctx, getAllBreedsPaginated, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, getAllBreedsPaginated, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -65,9 +65,6 @@ func (q *Queries) GetAllBreedsPaginated(ctx context.Context, arg GetAllBreedsPag
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -81,7 +78,7 @@ WHERE id = $1
 `
 
 func (q *Queries) GetBreedByID(ctx context.Context, id int32) (Breed, error) {
-	row := q.db.QueryRowContext(ctx, getBreedByID, id)
+	row := q.db.QueryRow(ctx, getBreedByID, id)
 	var i Breed
 	err := row.Scan(
 		&i.ID,
@@ -103,13 +100,13 @@ RETURNING id, name, species_id, created_at, updated_at
 `
 
 type UpdateBreedParams struct {
-	Name      string
-	SpeciesID int32
-	ID        int32
+	Name      string `db:"name" json:"name"`
+	SpeciesID int32  `db:"species_id" json:"species_id"`
+	ID        int32  `db:"id" json:"id"`
 }
 
 func (q *Queries) UpdateBreed(ctx context.Context, arg UpdateBreedParams) (Breed, error) {
-	row := q.db.QueryRowContext(ctx, updateBreed, arg.Name, arg.SpeciesID, arg.ID)
+	row := q.db.QueryRow(ctx, updateBreed, arg.Name, arg.SpeciesID, arg.ID)
 	var i Breed
 	err := row.Scan(
 		&i.ID,

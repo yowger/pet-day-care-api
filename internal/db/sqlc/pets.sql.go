@@ -7,8 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
-	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createPet = `-- name: CreatePet :one
@@ -18,13 +18,13 @@ RETURNING id, age, name, species_id, breed_id, created_at, updated_at
 `
 
 type CreatePetParams struct {
-	Name      string
-	SpeciesID int32
-	BreedID   int32
+	Name      string `db:"name" json:"name"`
+	SpeciesID int32  `db:"species_id" json:"species_id"`
+	BreedID   int32  `db:"breed_id" json:"breed_id"`
 }
 
 func (q *Queries) CreatePet(ctx context.Context, arg CreatePetParams) (Pet, error) {
-	row := q.db.QueryRowContext(ctx, createPet, arg.Name, arg.SpeciesID, arg.BreedID)
+	row := q.db.QueryRow(ctx, createPet, arg.Name, arg.SpeciesID, arg.BreedID)
 	var i Pet
 	err := row.Scan(
 		&i.ID,
@@ -49,19 +49,19 @@ WHERE p.id = $1
 `
 
 type GetPetByIDRow struct {
-	ID          int32
-	Age         time.Time
-	Name        string
-	SpeciesID   int32
-	BreedID     int32
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	BreedName   sql.NullString
-	SpeciesName sql.NullString
+	ID          int32            `db:"id" json:"id"`
+	Age         pgtype.Timestamp `db:"age" json:"age"`
+	Name        string           `db:"name" json:"name"`
+	SpeciesID   int32            `db:"species_id" json:"species_id"`
+	BreedID     int32            `db:"breed_id" json:"breed_id"`
+	CreatedAt   pgtype.Timestamp `db:"created_at" json:"created_at"`
+	UpdatedAt   pgtype.Timestamp `db:"updated_at" json:"updated_at"`
+	BreedName   pgtype.Text      `db:"breed_name" json:"breed_name"`
+	SpeciesName pgtype.Text      `db:"species_name" json:"species_name"`
 }
 
 func (q *Queries) GetPetByID(ctx context.Context, id int32) (GetPetByIDRow, error) {
-	row := q.db.QueryRowContext(ctx, getPetByID, id)
+	row := q.db.QueryRow(ctx, getPetByID, id)
 	var i GetPetByIDRow
 	err := row.Scan(
 		&i.ID,
@@ -96,24 +96,24 @@ LIMIT $1 OFFSET $2
 `
 
 type GetPetsWithOwnersPaginatedParams struct {
-	Limit  int32
-	Offset int32
+	Limit  int32 `db:"limit" json:"limit"`
+	Offset int32 `db:"offset" json:"offset"`
 }
 
 type GetPetsWithOwnersPaginatedRow struct {
-	PetID       int32
-	PetName     string
-	PetAge      time.Time
-	SpeciesName sql.NullString
-	BreedName   sql.NullString
-	OwnerID     sql.NullInt32
-	OwnerName   interface{}
-	OwnerEmail  sql.NullString
-	OwnerPhone  sql.NullString
+	PetID       int32            `db:"pet_id" json:"pet_id"`
+	PetName     string           `db:"pet_name" json:"pet_name"`
+	PetAge      pgtype.Timestamp `db:"pet_age" json:"pet_age"`
+	SpeciesName pgtype.Text      `db:"species_name" json:"species_name"`
+	BreedName   pgtype.Text      `db:"breed_name" json:"breed_name"`
+	OwnerID     pgtype.Int4      `db:"owner_id" json:"owner_id"`
+	OwnerName   interface{}      `db:"owner_name" json:"owner_name"`
+	OwnerEmail  pgtype.Text      `db:"owner_email" json:"owner_email"`
+	OwnerPhone  pgtype.Text      `db:"owner_phone" json:"owner_phone"`
 }
 
 func (q *Queries) GetPetsWithOwnersPaginated(ctx context.Context, arg GetPetsWithOwnersPaginatedParams) ([]GetPetsWithOwnersPaginatedRow, error) {
-	rows, err := q.db.QueryContext(ctx, getPetsWithOwnersPaginated, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, getPetsWithOwnersPaginated, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -136,9 +136,6 @@ func (q *Queries) GetPetsWithOwnersPaginated(ctx context.Context, arg GetPetsWit
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -156,14 +153,14 @@ RETURNING id, age, name, species_id, breed_id, created_at, updated_at
 `
 
 type UpdatePetParams struct {
-	Name      string
-	SpeciesID int32
-	BreedID   int32
-	ID        int32
+	Name      string `db:"name" json:"name"`
+	SpeciesID int32  `db:"species_id" json:"species_id"`
+	BreedID   int32  `db:"breed_id" json:"breed_id"`
+	ID        int32  `db:"id" json:"id"`
 }
 
 func (q *Queries) UpdatePet(ctx context.Context, arg UpdatePetParams) (Pet, error) {
-	row := q.db.QueryRowContext(ctx, updatePet,
+	row := q.db.QueryRow(ctx, updatePet,
 		arg.Name,
 		arg.SpeciesID,
 		arg.BreedID,

@@ -16,7 +16,7 @@ WHERE id = $1
 `
 
 func (q *Queries) GetRoleByID(ctx context.Context, id int32) (Role, error) {
-	row := q.db.QueryRowContext(ctx, getRoleByID, id)
+	row := q.db.QueryRow(ctx, getRoleByID, id)
 	var i Role
 	err := row.Scan(
 		&i.ID,
@@ -34,7 +34,7 @@ ORDER BY name
 `
 
 func (q *Queries) ListRoles(ctx context.Context) ([]Role, error) {
-	rows, err := q.db.QueryContext(ctx, listRoles)
+	rows, err := q.db.Query(ctx, listRoles)
 	if err != nil {
 		return nil, err
 	}
@@ -51,9 +51,6 @@ func (q *Queries) ListRoles(ctx context.Context) ([]Role, error) {
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

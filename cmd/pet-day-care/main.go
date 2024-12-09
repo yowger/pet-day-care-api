@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	config "github.com/yowger/pet-day-care-api/config"
-	database "github.com/yowger/pet-day-care-api/pkg/db/postgres"
+	database "github.com/yowger/pet-day-care-api/pkg/db"
 )
 
 func main() {
@@ -24,4 +28,12 @@ func main() {
 		log.Fatalf("Error connecting to database: %v", err)
 	}
 	defer database.Close()
+
+	log.Println("Server started...")
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	<-ctx.Done()
+	log.Println("Shutting down gracefully...")
 }

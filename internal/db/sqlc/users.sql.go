@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -23,15 +24,15 @@ RETURNING id, first_name, last_name, email, phone_number, password, role_id, cre
 `
 
 type CreateUserParams struct {
-	FirstName   string
-	LastName    string
-	Email       string
-	PhoneNumber string
-	RoleID      int32
+	FirstName   string `db:"first_name" json:"first_name"`
+	LastName    string `db:"last_name" json:"last_name"`
+	Email       string `db:"email" json:"email"`
+	PhoneNumber string `db:"phone_number" json:"phone_number"`
+	RoleID      int32  `db:"role_id" json:"role_id"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, createUser,
+	row := q.db.QueryRow(ctx, createUser,
 		arg.FirstName,
 		arg.LastName,
 		arg.Email,
@@ -60,7 +61,7 @@ WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserByID, id)
+	row := q.db.QueryRow(ctx, getUserByID, id)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -96,25 +97,25 @@ LIMIT $1 OFFSET $2
 `
 
 type GetUsersWithPetsPaginatedParams struct {
-	Limit  int32
-	Offset int32
+	Limit  int32 `db:"limit" json:"limit"`
+	Offset int32 `db:"offset" json:"offset"`
 }
 
 type GetUsersWithPetsPaginatedRow struct {
-	UserID      int32
-	FirstName   string
-	LastName    string
-	Email       string
-	PhoneNumber string
-	PetID       sql.NullInt32
-	PetName     sql.NullString
-	PetAge      sql.NullTime
-	SpeciesName sql.NullString
-	BreedName   sql.NullString
+	UserID      int32            `db:"user_id" json:"user_id"`
+	FirstName   string           `db:"first_name" json:"first_name"`
+	LastName    string           `db:"last_name" json:"last_name"`
+	Email       string           `db:"email" json:"email"`
+	PhoneNumber string           `db:"phone_number" json:"phone_number"`
+	PetID       pgtype.Int4      `db:"pet_id" json:"pet_id"`
+	PetName     pgtype.Text      `db:"pet_name" json:"pet_name"`
+	PetAge      pgtype.Timestamp `db:"pet_age" json:"pet_age"`
+	SpeciesName pgtype.Text      `db:"species_name" json:"species_name"`
+	BreedName   pgtype.Text      `db:"breed_name" json:"breed_name"`
 }
 
 func (q *Queries) GetUsersWithPetsPaginated(ctx context.Context, arg GetUsersWithPetsPaginatedParams) ([]GetUsersWithPetsPaginatedRow, error) {
-	rows, err := q.db.QueryContext(ctx, getUsersWithPetsPaginated, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, getUsersWithPetsPaginated, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -138,9 +139,6 @@ func (q *Queries) GetUsersWithPetsPaginated(ctx context.Context, arg GetUsersWit
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -159,16 +157,16 @@ RETURNING id, first_name, last_name, email, phone_number, password, role_id, cre
 `
 
 type UpdateUserByIDParams struct {
-	FirstName   string
-	LastName    string
-	Email       string
-	PhoneNumber string
-	RoleID      int32
-	ID          int32
+	FirstName   string `db:"first_name" json:"first_name"`
+	LastName    string `db:"last_name" json:"last_name"`
+	Email       string `db:"email" json:"email"`
+	PhoneNumber string `db:"phone_number" json:"phone_number"`
+	RoleID      int32  `db:"role_id" json:"role_id"`
+	ID          int32  `db:"id" json:"id"`
 }
 
 func (q *Queries) UpdateUserByID(ctx context.Context, arg UpdateUserByIDParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, updateUserByID,
+	row := q.db.QueryRow(ctx, updateUserByID,
 		arg.FirstName,
 		arg.LastName,
 		arg.Email,

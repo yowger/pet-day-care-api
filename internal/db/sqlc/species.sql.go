@@ -16,7 +16,7 @@ RETURNING id, name, created_at, updated_at
 `
 
 func (q *Queries) CreateSpecies(ctx context.Context, name string) (Species, error) {
-	row := q.db.QueryRowContext(ctx, createSpecies, name)
+	row := q.db.QueryRow(ctx, createSpecies, name)
 	var i Species
 	err := row.Scan(
 		&i.ID,
@@ -34,7 +34,7 @@ WHERE id = $1
 `
 
 func (q *Queries) GetSpecieByID(ctx context.Context, id int32) (Species, error) {
-	row := q.db.QueryRowContext(ctx, getSpecieByID, id)
+	row := q.db.QueryRow(ctx, getSpecieByID, id)
 	var i Species
 	err := row.Scan(
 		&i.ID,
@@ -53,12 +53,12 @@ LIMIT $1 OFFSET $2
 `
 
 type GetSpeciesPaginatedParams struct {
-	Limit  int32
-	Offset int32
+	Limit  int32 `db:"limit" json:"limit"`
+	Offset int32 `db:"offset" json:"offset"`
 }
 
 func (q *Queries) GetSpeciesPaginated(ctx context.Context, arg GetSpeciesPaginatedParams) ([]Species, error) {
-	rows, err := q.db.QueryContext(ctx, getSpeciesPaginated, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, getSpeciesPaginated, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -76,9 +76,6 @@ func (q *Queries) GetSpeciesPaginated(ctx context.Context, arg GetSpeciesPaginat
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -94,12 +91,12 @@ RETURNING id, name, created_at, updated_at
 `
 
 type UpdateSpeciesByIDParams struct {
-	Name string
-	ID   int32
+	Name string `db:"name" json:"name"`
+	ID   int32  `db:"id" json:"id"`
 }
 
 func (q *Queries) UpdateSpeciesByID(ctx context.Context, arg UpdateSpeciesByIDParams) (Species, error) {
-	row := q.db.QueryRowContext(ctx, updateSpeciesByID, arg.Name, arg.ID)
+	row := q.db.QueryRow(ctx, updateSpeciesByID, arg.Name, arg.ID)
 	var i Species
 	err := row.Scan(
 		&i.ID,
