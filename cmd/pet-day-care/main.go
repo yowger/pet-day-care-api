@@ -4,34 +4,27 @@ import (
 	"context"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
+	"time"
 
 	"github.com/yowger/pet-day-care-api/config"
 	"github.com/yowger/pet-day-care-api/internal/db"
 )
 
 func main() {
-	var wg sync.WaitGroup
-
 	configPath := "."
 	config := config.InitConfig(configPath)
-
-	pgxPool := db.SetupPGXPool(config.DATABASE_URL)
-	defer pgxPool.Close()
-
-	e := db.InitEchoServer()
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	wg.Add(1)
-	db.StartServer(e, ":8080", &wg)
+	server := db.NewServer(config, stop)
+	defer server.PGXPool.Close()
 
-	wg.Add(1)
-	go db.HealthCheck(pgxPool, &wg)
+	server.StartServer()
+	server.HealthCheck(30*time.Second, ctx)
 
 	<-ctx.Done()
 
-	db.GracefulShutdown(e, stop)
+	server.GracefulShutdown()
 }

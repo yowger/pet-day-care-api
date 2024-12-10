@@ -8,6 +8,7 @@ import (
 )
 
 type Config struct {
+	PORT         string `mapstructure:"PORT"`
 	DATABASE_URL string `mapstructure:"DATABASE_URL"`
 }
 
