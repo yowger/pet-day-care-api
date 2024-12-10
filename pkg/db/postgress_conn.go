@@ -24,11 +24,5 @@ func NewPGXPool(connString string) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("failed to create db pool: %w", err)
 	}
 
-	if err := pool.Ping(context.Background()); err != nil {
-		pool.Close()
-
-		return nil, fmt.Errorf("failed to ping db: %w", err)
-	}
-
 	return pool, nil
 }

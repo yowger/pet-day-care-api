@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -22,6 +23,17 @@ func SetupPGXPool(connString string) *pgxpool.Pool {
 	return pgxPool
 }
 
+func HealthCheck(pgxPool *pgxpool.Pool, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for {
+		time.Sleep(30 * time.Second)
+		if err := pgxPool.Ping(context.Background()); err != nil {
+			log.Fatalf("Error connecting to database: %v", err)
+		}
+	}
+}
+
 func InitEchoServer() *echo.Echo {
 	e := echo.New()
 
@@ -30,14 +42,14 @@ func InitEchoServer() *echo.Echo {
 	return e
 }
 
-func StartServer(e *echo.Echo, port string) {
+func StartServer(e *echo.Echo, port string, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	go func() {
 		if err := e.Start(port); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Error starting server: %v", err)
 		}
 	}()
-
-	log.Printf("Server started on port %s", port)
 }
 
 func GracefulShutdown(e *echo.Echo, stop context.CancelFunc) {
