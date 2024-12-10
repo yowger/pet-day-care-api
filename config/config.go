@@ -2,12 +2,27 @@ package config
 
 import (
 	"errors"
+	"log"
 
 	"github.com/spf13/viper"
 )
 
 type Config struct {
 	DATABASE_URL string `mapstructure:"DATABASE_URL"`
+}
+
+func InitConfig(path string) *Config {
+	cfgFile, err := LoadConfig(path)
+	if err != nil {
+		log.Fatalf("Error loading config file: %v", err)
+	}
+
+	cfg, err := ParseConfig(cfgFile)
+	if err != nil {
+		log.Fatalf("Error parsing config file: %v", err)
+	}
+
+	return cfg
 }
 
 func LoadConfig(configPath string) (*viper.Viper, error) {
