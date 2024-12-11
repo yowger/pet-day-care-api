@@ -104,6 +104,7 @@ func (server *Server) GracefulShutdown() {
 	}
 
 	server.WG.Wait()
+	server.PGXPool.Close()
 
 	log.Println("Shutdown complete...")
 }
