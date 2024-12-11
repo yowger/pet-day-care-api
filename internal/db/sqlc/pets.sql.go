@@ -77,6 +77,58 @@ func (q *Queries) GetPetByID(ctx context.Context, id int32) (GetPetByIDRow, erro
 	return i, err
 }
 
+const getPetsPaginated = `-- name: GetPetsPaginated :many
+SELECT p.id AS pet_id,
+    p.name AS pet_name,
+    p.age AS pet_age,
+    s.name AS species_name,
+    b.name AS breed_name
+FROM pets p
+    LEFT JOIN species s ON p.species_id = s.id
+    LEFT JOIN breeds b ON p.breed_id = b.id
+ORDER BY p.created_at DESC
+LIMIT $1 OFFSET $2
+`
+
+type GetPetsPaginatedParams struct {
+	Limit  int32 `db:"limit" json:"limit"`
+	Offset int32 `db:"offset" json:"offset"`
+}
+
+type GetPetsPaginatedRow struct {
+	PetID       int32            `db:"pet_id" json:"pet_id"`
+	PetName     string           `db:"pet_name" json:"pet_name"`
+	PetAge      pgtype.Timestamp `db:"pet_age" json:"pet_age"`
+	SpeciesName pgtype.Text      `db:"species_name" json:"species_name"`
+	BreedName   pgtype.Text      `db:"breed_name" json:"breed_name"`
+}
+
+func (q *Queries) GetPetsPaginated(ctx context.Context, arg GetPetsPaginatedParams) ([]GetPetsPaginatedRow, error) {
+	rows, err := q.db.Query(ctx, getPetsPaginated, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetPetsPaginatedRow
+	for rows.Next() {
+		var i GetPetsPaginatedRow
+		if err := rows.Scan(
+			&i.PetID,
+			&i.PetName,
+			&i.PetAge,
+			&i.SpeciesName,
+			&i.BreedName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getPetsWithOwnersPaginated = `-- name: GetPetsWithOwnersPaginated :many
 SELECT p.id AS pet_id,
     p.name AS pet_name,

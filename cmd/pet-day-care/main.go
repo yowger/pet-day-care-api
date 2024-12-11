@@ -8,7 +8,10 @@ import (
 	"time"
 
 	"github.com/yowger/pet-day-care-api/config"
-	"github.com/yowger/pet-day-care-api/internal/db"
+	server "github.com/yowger/pet-day-care-api/internal/db"
+	"github.com/yowger/pet-day-care-api/internal/db/middleware"
+	db "github.com/yowger/pet-day-care-api/internal/db/sqlc"
+	"github.com/yowger/pet-day-care-api/internal/router"
 )
 
 func main() {
@@ -18,12 +21,16 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	server := db.NewServer(config, stop)
+	server := server.NewServer(config, stop)
 	server.StartServer()
 	server.HealthCheck(30*time.Second, ctx)
+
+	middleware.SetupMiddleware(server.Echo)
+
+	queries := db.New(server.PGXPool)
+	router.SetUpRouter(server.Echo, queries)
 
 	<-ctx.Done()
 
 	server.GracefulShutdown()
-
 }

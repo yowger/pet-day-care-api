@@ -1,4 +1,4 @@
-package db
+package server
 
 import (
 	"context"
@@ -11,8 +11,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
 	"github.com/yowger/pet-day-care-api/config"
-	db "github.com/yowger/pet-day-care-api/internal/db/sqlc"
-	"github.com/yowger/pet-day-care-api/internal/router"
 	database "github.com/yowger/pet-day-care-api/pkg/db"
 )
 
@@ -26,13 +24,13 @@ type Server struct {
 
 func NewServer(config *config.Config, shutdown context.CancelFunc) *Server {
 	pgxPool := setupPGXPool(config)
-	server := initEchoServer(pgxPool)
+	echo := setupEchoServer()
 	wg := &sync.WaitGroup{}
 
 	return &Server{
 		Config:   config,
 		PGXPool:  pgxPool,
-		Echo:     server,
+		Echo:     echo,
 		WG:       wg,
 		Shutdown: shutdown,
 	}
@@ -48,12 +46,8 @@ func setupPGXPool(config *config.Config) *pgxpool.Pool {
 	return pgxPool
 }
 
-func initEchoServer(pgxPool *pgxpool.Pool) *echo.Echo {
+func setupEchoServer() *echo.Echo {
 	e := echo.New()
-
-	queries := db.New(pgxPool)
-	r := router.NewAppRouter(queries)
-	r.Init(e)
 
 	return e
 }

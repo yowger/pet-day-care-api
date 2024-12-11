@@ -2,6 +2,17 @@
 INSERT INTO pets (name, species_id, breed_id)
 VALUES ($1, $2, $3)
 RETURNING *;
+-- name: GetPetsPaginated :many
+SELECT p.id AS pet_id,
+    p.name AS pet_name,
+    p.age AS pet_age,
+    s.name AS species_name,
+    b.name AS breed_name
+FROM pets p
+    LEFT JOIN species s ON p.species_id = s.id
+    LEFT JOIN breeds b ON p.breed_id = b.id
+ORDER BY p.created_at DESC
+LIMIT $1 OFFSET $2;
 -- name: GetPetsWithOwnersPaginated :many
 SELECT p.id AS pet_id,
     p.name AS pet_name,

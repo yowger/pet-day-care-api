@@ -28,7 +28,7 @@ func InitConfig(path string) *Config {
 
 func LoadConfig(configPath string) (*viper.Viper, error) {
 	v := viper.New()
-	v.SetConfigName("config")
+	v.SetConfigName(".env")
 	v.SetConfigType("env")
 	v.AddConfigPath(configPath)
 	v.AutomaticEnv()
