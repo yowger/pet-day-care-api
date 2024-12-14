@@ -1,11 +1,11 @@
 -- name: CreatePet :one
-INSERT INTO pets (name, species_id, breed_id)
-VALUES ($1, $2, $3)
+INSERT INTO pets (name, birth_date, species_id, breed_id)
+VALUES ($1, $2, $3, $4)
 RETURNING *;
 -- name: GetPetsPaginated :many
 SELECT p.id AS pet_id,
     p.name AS pet_name,
-    p.age AS pet_age,
+    p.birth_date AS pet_birth_date,
     s.name AS species_name,
     b.name AS breed_name
 FROM pets p
@@ -16,7 +16,7 @@ LIMIT $1 OFFSET $2;
 -- name: GetPetsWithOwnersPaginated :many
 SELECT p.id AS pet_id,
     p.name AS pet_name,
-    p.age AS pet_age,
+    p.birth_date AS pet_birth_date,
     s.name AS species_name,
     b.name AS breed_name,
     u.id AS owner_id,

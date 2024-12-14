@@ -32,7 +32,7 @@ CREATE TABLE breeds (
 );
 CREATE TABLE pets (
     id SERIAL PRIMARY KEY,
-    age TIMESTAMP NOT NULL,
+    birth_date DATE NOT NULL,
     name VARCHAR(32) NOT NULL CHECK (name != ''),
     species_id int NOT NULL REFERENCES species(id) ON DELETE CASCADE,
     breed_id int NOT NULL REFERENCES breeds(id) ON DELETE CASCADE,

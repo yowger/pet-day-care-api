@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -15,6 +16,29 @@ type PetHandler struct {
 
 func NewPetHandler(queries *db.Queries) *PetHandler {
 	return &PetHandler{queries: queries}
+}
+
+func (petHandler *PetHandler) CreatePetHandler(c echo.Context) error {
+	var req db.CreatePetParams
+
+	if err := c.Bind(&req); err != nil {
+		log.Println("invalid request: ", err)
+
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
+	}
+
+	// if err := c.Validate(req); err != nil {
+	// 	return c.JSON(http.StatusBadRequest, map[string]string{"error": "Validation failed: " + err.Error()})
+	// }
+
+	pet, err := petHandler.queries.CreatePet(context.Background(), req)
+	if err != nil {
+		log.Println("\nfailed to create pet: ", err)
+
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create pet"})
+	}
+
+	return c.JSON(http.StatusCreated, pet)
 }
 
 func (petHandler *PetHandler) GetPetsPaginatedHandler(c echo.Context) error {

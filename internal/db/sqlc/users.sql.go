@@ -85,7 +85,7 @@ SELECT u.id AS user_id,
     u.phone_number,
     p.id AS pet_id,
     p.name AS pet_name,
-    p.age AS pet_age,
+    p.birth_date AS pet_birth_date,
     s.name AS species_name,
     b.name AS breed_name
 FROM users u
@@ -102,16 +102,16 @@ type GetUsersWithPetsPaginatedParams struct {
 }
 
 type GetUsersWithPetsPaginatedRow struct {
-	UserID      int32            `db:"user_id" json:"user_id"`
-	FirstName   string           `db:"first_name" json:"first_name"`
-	LastName    string           `db:"last_name" json:"last_name"`
-	Email       string           `db:"email" json:"email"`
-	PhoneNumber string           `db:"phone_number" json:"phone_number"`
-	PetID       pgtype.Int4      `db:"pet_id" json:"pet_id"`
-	PetName     pgtype.Text      `db:"pet_name" json:"pet_name"`
-	PetAge      pgtype.Timestamp `db:"pet_age" json:"pet_age"`
-	SpeciesName pgtype.Text      `db:"species_name" json:"species_name"`
-	BreedName   pgtype.Text      `db:"breed_name" json:"breed_name"`
+	UserID       int32       `db:"user_id" json:"user_id"`
+	FirstName    string      `db:"first_name" json:"first_name"`
+	LastName     string      `db:"last_name" json:"last_name"`
+	Email        string      `db:"email" json:"email"`
+	PhoneNumber  string      `db:"phone_number" json:"phone_number"`
+	PetID        pgtype.Int4 `db:"pet_id" json:"pet_id"`
+	PetName      pgtype.Text `db:"pet_name" json:"pet_name"`
+	PetBirthDate pgtype.Date `db:"pet_birth_date" json:"pet_birth_date"`
+	SpeciesName  pgtype.Text `db:"species_name" json:"species_name"`
+	BreedName    pgtype.Text `db:"breed_name" json:"breed_name"`
 }
 
 func (q *Queries) GetUsersWithPetsPaginated(ctx context.Context, arg GetUsersWithPetsPaginatedParams) ([]GetUsersWithPetsPaginatedRow, error) {
@@ -131,7 +131,7 @@ func (q *Queries) GetUsersWithPetsPaginated(ctx context.Context, arg GetUsersWit
 			&i.PhoneNumber,
 			&i.PetID,
 			&i.PetName,
-			&i.PetAge,
+			&i.PetBirthDate,
 			&i.SpeciesName,
 			&i.BreedName,
 		); err != nil {

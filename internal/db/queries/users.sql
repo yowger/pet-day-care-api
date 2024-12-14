@@ -29,7 +29,7 @@ SELECT u.id AS user_id,
     u.phone_number,
     p.id AS pet_id,
     p.name AS pet_name,
-    p.age AS pet_age,
+    p.birth_date AS pet_birth_date,
     s.name AS species_name,
     b.name AS breed_name
 FROM users u

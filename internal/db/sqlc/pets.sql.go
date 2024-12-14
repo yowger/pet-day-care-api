@@ -12,23 +12,29 @@ import (
 )
 
 const createPet = `-- name: CreatePet :one
-INSERT INTO pets (name, species_id, breed_id)
-VALUES ($1, $2, $3)
-RETURNING id, age, name, species_id, breed_id, created_at, updated_at
+INSERT INTO pets (name, birth_date, species_id, breed_id)
+VALUES ($1, $2, $3, $4)
+RETURNING id, birth_date, name, species_id, breed_id, created_at, updated_at
 `
 
 type CreatePetParams struct {
-	Name      string `db:"name" json:"name"`
-	SpeciesID int32  `db:"species_id" json:"species_id"`
-	BreedID   int32  `db:"breed_id" json:"breed_id"`
+	Name      string      `db:"name" json:"name"`
+	BirthDate pgtype.Date `db:"birth_date" json:"birth_date"`
+	SpeciesID int32       `db:"species_id" json:"species_id"`
+	BreedID   int32       `db:"breed_id" json:"breed_id"`
 }
 
 func (q *Queries) CreatePet(ctx context.Context, arg CreatePetParams) (Pet, error) {
-	row := q.db.QueryRow(ctx, createPet, arg.Name, arg.SpeciesID, arg.BreedID)
+	row := q.db.QueryRow(ctx, createPet,
+		arg.Name,
+		arg.BirthDate,
+		arg.SpeciesID,
+		arg.BreedID,
+	)
 	var i Pet
 	err := row.Scan(
 		&i.ID,
-		&i.Age,
+		&i.BirthDate,
 		&i.Name,
 		&i.SpeciesID,
 		&i.BreedID,
@@ -39,7 +45,7 @@ func (q *Queries) CreatePet(ctx context.Context, arg CreatePetParams) (Pet, erro
 }
 
 const getPetByID = `-- name: GetPetByID :one
-SELECT p.id, p.age, p.name, p.species_id, p.breed_id, p.created_at, p.updated_at,
+SELECT p.id, p.birth_date, p.name, p.species_id, p.breed_id, p.created_at, p.updated_at,
     b.name AS breed_name,
     s.name AS species_name
 FROM pets p
@@ -50,7 +56,7 @@ WHERE p.id = $1
 
 type GetPetByIDRow struct {
 	ID          int32            `db:"id" json:"id"`
-	Age         pgtype.Timestamp `db:"age" json:"age"`
+	BirthDate   pgtype.Date      `db:"birth_date" json:"birth_date"`
 	Name        string           `db:"name" json:"name"`
 	SpeciesID   int32            `db:"species_id" json:"species_id"`
 	BreedID     int32            `db:"breed_id" json:"breed_id"`
@@ -65,7 +71,7 @@ func (q *Queries) GetPetByID(ctx context.Context, id int32) (GetPetByIDRow, erro
 	var i GetPetByIDRow
 	err := row.Scan(
 		&i.ID,
-		&i.Age,
+		&i.BirthDate,
 		&i.Name,
 		&i.SpeciesID,
 		&i.BreedID,
@@ -80,7 +86,7 @@ func (q *Queries) GetPetByID(ctx context.Context, id int32) (GetPetByIDRow, erro
 const getPetsPaginated = `-- name: GetPetsPaginated :many
 SELECT p.id AS pet_id,
     p.name AS pet_name,
-    p.age AS pet_age,
+    p.birth_date AS pet_birth_date,
     s.name AS species_name,
     b.name AS breed_name
 FROM pets p
@@ -96,11 +102,11 @@ type GetPetsPaginatedParams struct {
 }
 
 type GetPetsPaginatedRow struct {
-	PetID       int32            `db:"pet_id" json:"pet_id"`
-	PetName     string           `db:"pet_name" json:"pet_name"`
-	PetAge      pgtype.Timestamp `db:"pet_age" json:"pet_age"`
-	SpeciesName pgtype.Text      `db:"species_name" json:"species_name"`
-	BreedName   pgtype.Text      `db:"breed_name" json:"breed_name"`
+	PetID        int32       `db:"pet_id" json:"pet_id"`
+	PetName      string      `db:"pet_name" json:"pet_name"`
+	PetBirthDate pgtype.Date `db:"pet_birth_date" json:"pet_birth_date"`
+	SpeciesName  pgtype.Text `db:"species_name" json:"species_name"`
+	BreedName    pgtype.Text `db:"breed_name" json:"breed_name"`
 }
 
 func (q *Queries) GetPetsPaginated(ctx context.Context, arg GetPetsPaginatedParams) ([]GetPetsPaginatedRow, error) {
@@ -115,7 +121,7 @@ func (q *Queries) GetPetsPaginated(ctx context.Context, arg GetPetsPaginatedPara
 		if err := rows.Scan(
 			&i.PetID,
 			&i.PetName,
-			&i.PetAge,
+			&i.PetBirthDate,
 			&i.SpeciesName,
 			&i.BreedName,
 		); err != nil {
@@ -132,7 +138,7 @@ func (q *Queries) GetPetsPaginated(ctx context.Context, arg GetPetsPaginatedPara
 const getPetsWithOwnersPaginated = `-- name: GetPetsWithOwnersPaginated :many
 SELECT p.id AS pet_id,
     p.name AS pet_name,
-    p.age AS pet_age,
+    p.birth_date AS pet_birth_date,
     s.name AS species_name,
     b.name AS breed_name,
     u.id AS owner_id,
@@ -153,15 +159,15 @@ type GetPetsWithOwnersPaginatedParams struct {
 }
 
 type GetPetsWithOwnersPaginatedRow struct {
-	PetID       int32            `db:"pet_id" json:"pet_id"`
-	PetName     string           `db:"pet_name" json:"pet_name"`
-	PetAge      pgtype.Timestamp `db:"pet_age" json:"pet_age"`
-	SpeciesName pgtype.Text      `db:"species_name" json:"species_name"`
-	BreedName   pgtype.Text      `db:"breed_name" json:"breed_name"`
-	OwnerID     pgtype.Int4      `db:"owner_id" json:"owner_id"`
-	OwnerName   interface{}      `db:"owner_name" json:"owner_name"`
-	OwnerEmail  pgtype.Text      `db:"owner_email" json:"owner_email"`
-	OwnerPhone  pgtype.Text      `db:"owner_phone" json:"owner_phone"`
+	PetID        int32       `db:"pet_id" json:"pet_id"`
+	PetName      string      `db:"pet_name" json:"pet_name"`
+	PetBirthDate pgtype.Date `db:"pet_birth_date" json:"pet_birth_date"`
+	SpeciesName  pgtype.Text `db:"species_name" json:"species_name"`
+	BreedName    pgtype.Text `db:"breed_name" json:"breed_name"`
+	OwnerID      pgtype.Int4 `db:"owner_id" json:"owner_id"`
+	OwnerName    interface{} `db:"owner_name" json:"owner_name"`
+	OwnerEmail   pgtype.Text `db:"owner_email" json:"owner_email"`
+	OwnerPhone   pgtype.Text `db:"owner_phone" json:"owner_phone"`
 }
 
 func (q *Queries) GetPetsWithOwnersPaginated(ctx context.Context, arg GetPetsWithOwnersPaginatedParams) ([]GetPetsWithOwnersPaginatedRow, error) {
@@ -176,7 +182,7 @@ func (q *Queries) GetPetsWithOwnersPaginated(ctx context.Context, arg GetPetsWit
 		if err := rows.Scan(
 			&i.PetID,
 			&i.PetName,
-			&i.PetAge,
+			&i.PetBirthDate,
 			&i.SpeciesName,
 			&i.BreedName,
 			&i.OwnerID,
@@ -201,7 +207,7 @@ SET name = $1,
     breed_id = $3,
     updated_at = NOW()
 WHERE id = $4
-RETURNING id, age, name, species_id, breed_id, created_at, updated_at
+RETURNING id, birth_date, name, species_id, breed_id, created_at, updated_at
 `
 
 type UpdatePetParams struct {
@@ -221,7 +227,7 @@ func (q *Queries) UpdatePet(ctx context.Context, arg UpdatePetParams) (Pet, erro
 	var i Pet
 	err := row.Scan(
 		&i.ID,
-		&i.Age,
+		&i.BirthDate,
 		&i.Name,
 		&i.SpeciesID,
 		&i.BreedID,

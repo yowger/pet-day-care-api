@@ -9,5 +9,7 @@ func SetupPetRoutes(appRouter *AppRouter) {
 
 	publicRoutes := appRouter.Echo.Group("/pets")
 
+	publicRoutes.POST("", petHandler.CreatePetHandler)
 	publicRoutes.GET("", petHandler.GetPetsPaginatedHandler)
+	publicRoutes.GET("/:id", petHandler.GetPetByIdHandler)
 }

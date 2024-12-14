@@ -18,7 +18,7 @@ type Breed struct {
 
 type Pet struct {
 	ID        int32            `db:"id" json:"id"`
-	Age       pgtype.Timestamp `db:"age" json:"age"`
+	BirthDate pgtype.Date      `db:"birth_date" json:"birth_date"`
 	Name      string           `db:"name" json:"name"`
 	SpeciesID int32            `db:"species_id" json:"species_id"`
 	BreedID   int32            `db:"breed_id" json:"breed_id"`
