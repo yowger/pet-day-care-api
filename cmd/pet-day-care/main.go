@@ -28,7 +28,7 @@ func main() {
 	middleware.SetupMiddleware(server.Echo)
 
 	queries := db.New(server.PGXPool)
-	router.SetUpRouter(server.Echo, queries)
+	router.SetupRouter(server.Echo, queries)
 
 	<-ctx.Done()
 
