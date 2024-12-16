@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -37,6 +38,19 @@ func (userHandler *UserHandler) CreateUserHandler(c echo.Context) error {
 
 	if err := validation.Validate.Struct(req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	existingUser, err := userHandler.queries.GetUserByEmail(context.Background(), req.Email)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch user"})
+	}
+
+	fmt.Println("existing user: ", existingUser)
+
+	if existingUser != (db.User{}) {
+		fmt.Println("no user")
+
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "User with this email already exists."})
 	}
 
 	hashedPassword, err := auth.HashPassword(req.Password)

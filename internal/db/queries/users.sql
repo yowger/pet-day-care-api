@@ -9,19 +9,6 @@ INSERT INTO users (
     )
 VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
--- name: GetUserByID :one
-SELECT *
-FROM users
-WHERE id = $1;
--- name: UpdateUserByID :one
-update users
-SET first_name = $1,
-    last_name = $2,
-    email = $3,
-    phone_number = $4,
-    role_id = $5
-WHERE id = $6
-RETURNING *;
 -- name: GetUsersWithPetsPaginated :many
 SELECT u.id AS user_id,
     u.first_name,
@@ -39,3 +26,20 @@ FROM users u
     LEFT JOIN breeds b ON p.breed_id = b.id
 ORDER BY u.created_at DESC
 LIMIT $1 OFFSET $2;
+-- name: GetUserByID :one
+SELECT *
+FROM users
+WHERE id = $1;
+-- name: GetUserByEmail :one
+SELECT *
+FROM users
+WHERE email = $1;
+-- name: UpdateUserByID :one
+update users
+SET first_name = $1,
+    last_name = $2,
+    email = $3,
+    phone_number = $4,
+    role_id = $5
+WHERE id = $6
+RETURNING *;
