@@ -39,9 +39,20 @@ CREATE TABLE pets (
     created_at TIMESTAMP NOT NULL DEFAULT NOW (),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW ()
 );
+CREATE TABLE bookings (
+    id SERIAL PRIMARY KEY,
+    user_id int NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    pet_id int NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+    start_time DATE NOT NULL,
+    end_time DATE NOT NULL,
+    comments TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW (),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW ()
+);
 -- migrate:down
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS pets;
 DROP TABLE IF EXISTS breeds;
 DROP TABLE IF EXISTS species;
 DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS bookings;

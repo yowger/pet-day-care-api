@@ -8,6 +8,17 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Booking struct {
+	ID        int32            `db:"id" json:"id"`
+	UserID    int32            `db:"user_id" json:"user_id"`
+	PetID     int32            `db:"pet_id" json:"pet_id"`
+	StartTime pgtype.Date      `db:"start_time" json:"start_time"`
+	EndTime   pgtype.Date      `db:"end_time" json:"end_time"`
+	Comments  pgtype.Text      `db:"comments" json:"comments"`
+	CreatedAt pgtype.Timestamp `db:"created_at" json:"created_at"`
+	UpdatedAt pgtype.Timestamp `db:"updated_at" json:"updated_at"`
+}
+
 type Breed struct {
 	ID        int32            `db:"id" json:"id"`
 	Name      string           `db:"name" json:"name"`
