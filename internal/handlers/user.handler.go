@@ -36,7 +36,7 @@ func (userHandler *UserHandler) CreateUserHandler(c echo.Context) error {
 	var req db.CreateUserParams
 
 	if err := c.Bind(&req); err != nil {
-		log.Println("Invalid request:", err)
+		log.Printf("Error binding request: %v", err)
 
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
 	}
@@ -106,6 +106,48 @@ func (userHandler *UserHandler) CreateUserHandler(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, userResponse)
+}
+
+type LoginRequest struct {
+	Email    string `db:"email" json:"email"`
+	Password string `db:"password" json:"password"`
+}
+
+func (userHandler *UserHandler) Login(c echo.Context) error {
+	var req LoginRequest
+
+	if err := c.Bind(&req); err != nil {
+		log.Printf("Error binding request: %v", err)
+
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
+	}
+
+	if err := validation.Validate.Struct(req); err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		errors := make([]string, len(validationErrors))
+		for i, e := range validationErrors {
+			errors[i] = fmt.Sprintf("%s is invalid: %s", e.Field(), e.Tag())
+		}
+
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": fmt.Sprintf("Validation errors: %v", err)})
+	}
+
+	user, err := userHandler.queries.GetUserByEmail(context.Background(), req.Email)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "User with this email does not exist."})
+		}
+
+		log.Println("Failed to fetch user:", err)
+
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch user"})
+	}
+
+	if !auth.CheckPasswordHash(req.Password, user.Password) {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid credentials."})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "Login successful"})
 }
 
 // func (userHandler *UserHandler) GetUsersHandler(c echo.Context) error {

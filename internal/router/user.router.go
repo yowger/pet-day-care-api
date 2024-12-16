@@ -8,4 +8,5 @@ func SetupUserRoutes(appRouter *AppRouter) {
 	publicRoutes := appRouter.Echo.Group("/users")
 
 	publicRoutes.POST("", petHandler.CreateUserHandler)
+	publicRoutes.POST("/login", petHandler.Login)
 }
