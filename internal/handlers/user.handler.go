@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
 	db "github.com/yowger/pet-day-care-api/internal/db/sqlc"
 	"github.com/yowger/pet-day-care-api/pkg/auth"
@@ -47,17 +48,29 @@ func (userHandler *UserHandler) CreateUserHandler(c echo.Context) error {
 			errors[i] = fmt.Sprintf("%s is invalid: %s", e.Field(), e.Tag())
 		}
 
-		return c.JSON(http.StatusBadRequest, map[string]interface{}{"status": "error", "message": "Validation failed", "errors": errors})
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": fmt.Sprintf("Validation errors: %v", err)})
 	}
 
-	existingUser, err := userHandler.queries.GetUserByEmail(context.Background(), req.Email)
+	_, err := userHandler.queries.GetRoleByID(context.Background(), req.RoleID)
 	if err != nil {
-		log.Println("Failed to fetch user:", err)
+		if err == pgx.ErrNoRows {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Role with this ID does not exist."})
+		}
 
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch user"})
+		log.Println("Failed to fetch role:", err)
+
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch role"})
 	}
 
-	if existingUser != (db.User{}) {
+	userExists, getUserErr := userHandler.queries.GetUserByEmail(context.Background(), req.Email)
+	if getUserErr != nil {
+		if getUserErr != pgx.ErrNoRows {
+			log.Println("Failed to fetch user:", getUserErr)
+
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch user"})
+		}
+	}
+	if userExists != (db.User{}) {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "User with this email already exists."})
 	}
 
