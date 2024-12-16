@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	db "github.com/yowger/pet-day-care-api/internal/db/sqlc"
 	"github.com/yowger/pet-day-care-api/pkg/auth"
@@ -32,29 +34,37 @@ type UserResponse struct {
 func (userHandler *UserHandler) CreateUserHandler(c echo.Context) error {
 	var req db.CreateUserParams
 
-	if c.Bind(&req) != nil {
+	if err := c.Bind(&req); err != nil {
+		log.Println("Invalid request:", err)
+
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
 	}
 
 	if err := validation.Validate.Struct(req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		validationErrors := err.(validator.ValidationErrors)
+		errors := make([]string, len(validationErrors))
+		for i, e := range validationErrors {
+			errors[i] = fmt.Sprintf("%s is invalid: %s", e.Field(), e.Tag())
+		}
+
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"status": "error", "message": "Validation failed", "errors": errors})
 	}
 
 	existingUser, err := userHandler.queries.GetUserByEmail(context.Background(), req.Email)
 	if err != nil {
+		log.Println("Failed to fetch user:", err)
+
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch user"})
 	}
 
-	fmt.Println("existing user: ", existingUser)
-
 	if existingUser != (db.User{}) {
-		fmt.Println("no user")
-
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "User with this email already exists."})
 	}
 
 	hashedPassword, err := auth.HashPassword(req.Password)
 	if err != nil {
+		log.Println("Failed to hash password:", err)
+
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to hash password"})
 	}
 
@@ -67,12 +77,12 @@ func (userHandler *UserHandler) CreateUserHandler(c echo.Context) error {
 		RoleID:      req.RoleID,
 	})
 	if err != nil {
-		log.Println("\nfailed to create user: ", err)
+		log.Println("failed to create user: ", err)
 
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create user"})
 	}
 
-	formattedCreatedAt := user.CreatedAt.Time.Local().Format("2006-01-02 15:04:05")
+	formattedCreatedAt := user.CreatedAt.Time.Local().Format(time.RFC3339)
 	userResponse := UserResponse{
 		FirstName:   user.FirstName,
 		LastName:    user.LastName,
