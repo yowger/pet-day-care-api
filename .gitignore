@@ -25,4 +25,8 @@ go.work.sum
 .env
 config.env
 
+# personal
 /notes
+
+# air
+tmp/
