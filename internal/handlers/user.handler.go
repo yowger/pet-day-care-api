@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -24,6 +25,7 @@ type UserResponse struct {
 	Email       string `json:"email"`
 	PhoneNumber string `json:"phone_number"`
 	RoleID      int32  `json:"role_id"`
+	CreatedAt   string `json:"created_at"`
 }
 
 func (userHandler *UserHandler) CreateUserHandler(c echo.Context) error {
@@ -51,15 +53,19 @@ func (userHandler *UserHandler) CreateUserHandler(c echo.Context) error {
 		RoleID:      req.RoleID,
 	})
 	if err != nil {
+		log.Println("\nfailed to create user: ", err)
+
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create user"})
 	}
 
+	formattedCreatedAt := user.CreatedAt.Time.Local().Format("2006-01-02 15:04:05")
 	userResponse := UserResponse{
 		FirstName:   user.FirstName,
 		LastName:    user.LastName,
 		Email:       user.Email,
 		PhoneNumber: user.PhoneNumber,
 		RoleID:      user.RoleID,
+		CreatedAt:   formattedCreatedAt,
 	}
 
 	return c.JSON(http.StatusCreated, userResponse)
