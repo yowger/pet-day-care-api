@@ -17,9 +17,10 @@ INSERT INTO users (
         last_name,
         email,
         phone_number,
+        password,
         role_id
     )
-VALUES ($1, $2, $3, $4, $5)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING id, first_name, last_name, email, phone_number, password, role_id, created_at, updated_at
 `
 
@@ -28,6 +29,7 @@ type CreateUserParams struct {
 	LastName    string `db:"last_name" json:"last_name"`
 	Email       string `db:"email" json:"email"`
 	PhoneNumber string `db:"phone_number" json:"phone_number"`
+	Password    string `db:"password" json:"password"`
 	RoleID      int32  `db:"role_id" json:"role_id"`
 }
 
@@ -37,6 +39,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.LastName,
 		arg.Email,
 		arg.PhoneNumber,
+		arg.Password,
 		arg.RoleID,
 	)
 	var i User

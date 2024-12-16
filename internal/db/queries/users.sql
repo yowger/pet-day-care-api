@@ -4,9 +4,10 @@ INSERT INTO users (
         last_name,
         email,
         phone_number,
+        password,
         role_id
     )
-VALUES ($1, $2, $3, $4, $5)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 -- name: GetUserByID :one
 SELECT *

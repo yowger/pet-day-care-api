@@ -1,5 +1,11 @@
 package router
 
-func SetupUserRoutes(appRouter *AppRouter) {
+import "github.com/yowger/pet-day-care-api/internal/handlers"
 
+func SetupUserRoutes(appRouter *AppRouter) {
+	petHandler := handlers.NewUserHandler(appRouter.Queries)
+
+	publicRoutes := appRouter.Echo.Group("/users")
+
+	publicRoutes.POST("", petHandler.CreateUserHandler)
 }

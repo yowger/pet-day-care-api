@@ -8,6 +8,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	db "github.com/yowger/pet-day-care-api/internal/db/sqlc"
+	"github.com/yowger/pet-day-care-api/pkg/validation"
 )
 
 type PetHandler struct {
@@ -27,9 +28,9 @@ func (petHandler *PetHandler) CreatePetHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
 	}
 
-	// if err := c.Validate(req); err != nil {
-	// 	return c.JSON(http.StatusBadRequest, map[string]string{"error": "Validation failed: " + err.Error()})
-	// }
+	if err := validation.Validate.Struct(req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Validation failed."})
+	}
 
 	pet, err := petHandler.queries.CreatePet(context.Background(), req)
 	if err != nil {
@@ -68,3 +69,9 @@ func (petHandler *PetHandler) GetPetByIdHandler(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, pet)
 }
+
+// func (petHandler *PetHandler) UpdatePetByIdHandler(c echo.Context) error {
+// }
+
+// func (petHandler *PetHandler) DeletePetByIdHandler(c echo.Context) error {
+// }
